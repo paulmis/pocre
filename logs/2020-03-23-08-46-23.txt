@@ -1,0 +1,63 @@
+[2020-03-23 08:46:07] [INF] Matrix is a 8UC3 of size 664x138
+[2020-03-23 08:46:08] [INF] Matrix is a 8UC3 of size 664x138
+[2020-03-23 08:46:08] [ERR] Couldn't open file at traindata\0a10.txt
+[2020-03-23 08:46:08] [INF] Matrix is a 8UC3 of size 660x137
+[2020-03-23 08:46:08] [ERR] Couldn't open file at traindata\0a11.txt
+[2020-03-23 08:46:08] [INF] Matrix is a 8UC3 of size 662x142
+[2020-03-23 08:46:08] [ERR] Couldn't open file at traindata\0a12.txt
+[2020-03-23 08:46:08] [INF] Matrix is a 8UC3 of size 647x133
+[2020-03-23 08:46:09] [INF] Matrix is a 8UC3 of size 581x134
+[2020-03-23 08:46:09] [INF] Matrix is a 8UC3 of size 661x135
+[2020-03-23 08:46:09] [INF] Matrix is a 8UC3 of size 665x148
+[2020-03-23 08:46:10] [INF] Matrix is a 8UC3 of size 668x147
+[2020-03-23 08:46:10] [ERR] Couldn't open file at traindata\0a6.txt
+[2020-03-23 08:46:10] [INF] Matrix is a 8UC3 of size 664x141
+[2020-03-23 08:46:10] [ERR] Couldn't open file at traindata\0a7.txt
+[2020-03-23 08:46:10] [INF] Matrix is a 8UC3 of size 666x152
+[2020-03-23 08:46:10] [ERR] Couldn't open file at traindata\0a8.txt
+[2020-03-23 08:46:10] [INF] Matrix is a 8UC3 of size 676x140
+[2020-03-23 08:46:10] [ERR] Couldn't open file at traindata\0a9.txt
+[2020-03-23 08:46:10] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:10] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:10] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:10] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:11] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:11] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:11] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:11] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:11] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:11] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:11] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:11] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:12] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:12] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:12] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:12] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:12] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:12] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:12] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:13] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:13] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:13] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:13] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:13] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:13] [ERR] Missmatch in line 1: expected 9 signs but the text is 8 characters long
+[2020-03-23 08:46:13] [ERR] Couldn't draw frames or text on the image
+[2020-03-23 08:46:13] [ERR] Missmatch in line 1: expected 9 signs but the text is 8 characters long
+[2020-03-23 08:46:13] [ERR] Text check failed
+[2020-03-23 08:46:13] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:13] [ERR] Missmatch in line 1: expected 9 signs but the text is 8 characters long
+[2020-03-23 08:46:13] [ERR] Couldn't draw frames or text on the image
+[2020-03-23 08:46:13] [ERR] Missmatch in line 1: expected 9 signs but the text is 8 characters long
+[2020-03-23 08:46:13] [ERR] Text check failed
+[2020-03-23 08:46:13] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:13] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:14] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:14] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:14] [ERR] Missmatch in line 1: expected 9 signs but the text is 8 characters long
+[2020-03-23 08:46:14] [ERR] Couldn't draw frames or text on the image
+[2020-03-23 08:46:14] [ERR] Missmatch in line 1: expected 9 signs but the text is 8 characters long
+[2020-03-23 08:46:14] [ERR] Text check failed
+[2020-03-23 08:46:14] [INF] Matrix is a 8UC3 of size 169x48
+[2020-03-23 08:46:14] [ERR] Missmatch in line 1: expected 9 signs but the text is 8 characters long
+[2020-03-23 08:46:14] [ERR] Couldn't 
