@@ -1,5 +1,8 @@
 #pragma once
 
+static const cv::Vec3b red(0, 0, 255), blue(255, 0, 0), green(0, 255, 0), white(255, 255, 255), black(0, 0, 0), yellow(0, 255, 255);
+#define ts(x) std::to_string(x)
+
 template<typename T>
 T splstr(std::string& str, size_t& it, char delim = ' ')
 {
@@ -42,7 +45,6 @@ void draw_row(std::vector<cv::Mat> src, cv::Mat dst, cv::Point start, std::funct
 void draw_column(std::vector<cv::Mat> src, cv::Mat dst, cv::Point start, std::function<cv::Vec3b(double)> adapt);
 cv::Mat conv3to1(cv::Mat _image);
 cv::Mat conv1to3(cv::Mat image);
-std::string get_date(std::string format = "%F %X");
 void blink_image(cv::Mat image, std::string image_name);
 void resize(cv::Mat& src, cv::Size size);
 void resize(cv::Mat& src, double fx, double fy);

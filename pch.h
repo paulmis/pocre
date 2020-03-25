@@ -2,7 +2,6 @@
 
 #include <opencv2/opencv.hpp>
 
-
 // STL
 #include <iostream>
 #include <vector>
@@ -15,8 +14,8 @@
 namespace fs = std::filesystem;
 
 // Dependencies
-#include "utils.h"
 #include "journal.h"
+#include "utils.h"
 #include "blob.h"
 #include "line.h"
 #include "result.h"

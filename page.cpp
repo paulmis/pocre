@@ -14,13 +14,11 @@ namespace ocr
 
 		// Check if the number of blobs in each line match
 		for (int l = 0; l < lines.size(); l++)
-		{
 			if (lines[l].size() != text[l].size())
 			{
 				jerr("Missmatch in line " + std::to_string(l + 1) + ": expected " + std::to_string(lines[l].size()) + " signs but the text is " + std::to_string(text[l].size()) + " characters long");
 				return false;
 			}
-		}
 
 		return true;
 	}
@@ -55,6 +53,7 @@ namespace ocr
 			line.erase(std::remove(line.begin(), line.end(), ','), line.end());
 			line.erase(std::remove(line.begin(), line.end(), '\n'), line.end());
 			line.erase(std::remove(line.begin(), line.end(), '\r'), line.end());
+			line.erase(std::remove(line.begin(), line.end(), ':'), line.end());
 		}
 
 		text = _text;
@@ -86,25 +85,25 @@ namespace ocr
 		static vector<Point> mov = { Point(-1, 0), Point(0, -1), Point(1, 0), Point(0, 1),
 									 Point(-1, -1), Point(1, -1), Point(-1, 1), Point(1, 1) };
 
-		cv::Rect frame(cv::Point(), _image.size());
+		Rect frame(Point(), _image.size());
 		vector<vector<bool>> visited(_image.rows, vector<bool>(_image.cols, false));
 		for (int y = 0; y < _image.rows; y++)
 			for (int x = 0; x < _image.cols; x++)
 				if (!visited[y][x])
 				{
-					queue<cv::Point> queue;
-					vector<cv::Point> points;
+					queue<Point> queue;
+					vector<Point> points;
 					queue.push({ x, y });
 					visited[y][x] = true;
 
 					while (!queue.empty())
 					{
-						cv::Point cur = queue.front(); queue.pop();
+						Point cur = queue.front(); queue.pop();
 						points.push_back(cur);
 
-						for (cv::Point mv : mov)
+						for (Point mv : mov)
 						{
-							cv::Point nxt(cur.x + mv.x, cur.y + mv.y);
+							Point nxt(cur.x + mv.x, cur.y + mv.y);
 							if (frame.contains(nxt) && !visited[nxt.y][nxt.x] && fabs(_image.at<float>(cur) - _image.at<float>(nxt)) < 0.02)
 							{
 								visited[nxt.y][nxt.x] = true;
@@ -137,7 +136,7 @@ namespace ocr
 
 	// Calassify all eligible blobs on the image
 	// Uses a BFS where the condition check is given by the _eligible function
-	void page::classify(function<bool(float)> eligible, int min_points)
+	void page::classify(function<bool(float)> _eligible, int _min_points)
 	{
 		static vector<Point> mov = { Point(-1, 0), Point(0, -1), Point(1, 0), Point(0, 1),
 									 Point(-1, -1), Point(1, -1), Point(-1, 1), Point(1, 1) };
@@ -153,13 +152,13 @@ namespace ocr
 			for (int x = 0; x < image.size().width; x++)
 			{
 				// Check eligibility of the point
-				if (!visited[y][x] && eligible(image.at<float>(y, x)))
+				if (!visited[y][x] && _eligible(image.at<float>(y, x)))
 				{
 					ocr::blob blob;
-					vector<cv::Point> points = blob.make(cv::Point(x, y), image, visited, eligible, frame);
+					vector<cv::Point> points = blob.make(cv::Point(x, y), image, visited, _eligible, frame);
 
 					// Insert to blob if it's big enough
-					if (points.size() > min_points&& points.size() < min_points * 15)
+					if (points.size() > _min_points&& points.size() < _min_points * 15)
 					{
 						// Insert the blob into a line
 						blob.buffer(image.size());
@@ -205,51 +204,37 @@ namespace ocr
 			});
 	}
 
-	void page::ext_classify(function<bool(float)> eligible, size_t _min_blob, bool draw_text, std::string display_text)
+	void page::ext_classify(function<bool(float)> _eligible, size_t _min_blob, bool _draw_letters)
 	{
-		classify(eligible, _min_blob);
-		optional<Mat> image = draw(draw_text);
-
-		if (!image.has_value())
-		{
-			jerr("Couldn't draw frames or text on the image");
-			image = draw(false);
-		}
-
-		cv::imshow("final", image.value());
+		classify(_eligible, _min_blob);
+		cv::imshow("final", draw(_draw_letters));
 		cv::waitKey();
 		cv::destroyAllWindows();
 	}
 
-	vector<string> page::get_text(ocr::dictionary& dictionary)
+	vector<string> page::get_text(ocr::dictionary& _dictionary)
 	{
 		// Clear text
 		text.clear();
 		text.resize(lines.size());
 
-		// Classify lines
-		for (int line = 0; line < lines.size(); line++)
-		{
-			// Get blobs
-			vector<ocr::blob> blobs = lines[line].get_blobs();
-			Size image_size = dictionary.image_size();
-
-			// Process blobs
-			for (ocr::blob blob : blobs)
+		// Classify subsequent blobs
+		for (int l = 0; l < lines.size(); l++)
+			for (ocr::blob b : lines[l].get_blobs())
 			{
-				// Preprocess and classify
-				Mat sign_image = image(blob.get_roi());
-				resize(sign_image, image_size);
+				// Preprocess
+				Mat sign_image = image(b.get_roi());
+				resize(sign_image, _dictionary.image_size());
 				conv3to1(sign_image);
-				blur(sign_image, sign_image, cv::Size(3, 3));
-				text[line].push_back(dictionary.classify(sign_image).c);
+				blur(sign_image, sign_image, Size(3, 3));
+
+				text[l].push_back(_dictionary.classify(sign_image).c);
 			}
-		}
 
 		return text;
 	}
 
-	vector<string> page::get_text_extended(ocr::dictionary& dictionary)
+	vector<string> page::get_text_extended(ocr::dictionary& _dictionary)
 	{
 		// Clear text
 		text.clear();
@@ -257,57 +242,51 @@ namespace ocr
 		jinf("Recognized text:");
 
 		// Classify lines
-		for (int line = 0; line < lines.size(); line++)
+		for (int l = 0; l < lines.size(); l++)
 		{
-			// Get blobs
-			vector<ocr::blob> blobs = lines[line].get_blobs();
-
-			// Make check mat
-			Size image_size = dictionary.image_size();
-			Mat check_image = Mat(((uint)blobs.size() + 1) * image_size.height, (dictionary.size() + 1) * image_size.width, CV_8UC3);
+			// Create a classification check image
+			Size image_size = _dictionary.image_size();
+			vector<blob> blobs = lines[l].get_blobs();
+			Mat check_image = Mat(((uint)blobs.size() + 1) * image_size.height, (_dictionary.size() + 1) * image_size.width, CV_8UC3);
 
 			// Get line's images and draw them
 			vector<Mat> images;
 
-			for (ocr::blob blob : blobs)
+			for (blob b : lines[l].get_blobs())
 			{
-				Mat sign_image = image(blob.get_roi());
+				Mat sign_image = image(b.get_roi());
 				resize(sign_image, image_size);
 				conv3to1(sign_image);
-				blur(sign_image, sign_image, cv::Size(3, 3));
+				blur(sign_image, sign_image, Size(3, 3));
 				images.push_back(sign_image);
 			}
 
 			draw_column(images, check_image, Point(0, image_size.height), one_white);
 
 			// Draw signs
-			vector<ocr::sign> signs = dictionary.get_signs();
-			vector<cv::Mat> sign_images;
-
-			for (ocr::sign& sign : signs)
-				sign_images.push_back(sign.get_heatmap());
-
+			vector<Mat> sign_images;
+			for (sign& s : _dictionary.get_signs())
+				sign_images.push_back(s.get_heatmap());
 			draw_row(sign_images, check_image, Point(image_size.width, 0), one_white);
 
 			// Classify images and draw gradients
 			for (int it = 0; it < images.size(); it++)
 			{
-				pair<ocr::result, vector<Mat>> res = dictionary.ext_classify(images[it]);
-				text[line].push_back(res.first.c);
+				pair<result, vector<Mat>> res = _dictionary.ext_classify(images[it]);
+				text[l].push_back(res.first.c);
 				draw_row(res.second, check_image, Point(image_size.width, image_size.height * (it + 1)), one_redgreen);
 			}
 
 			// Print results
-			cout << text[line] << endl;
+			cout << "line " << l << ": " << text[l] << endl;
 
 			// Show the image
 			resize(check_image, 2.5, 2.5);
-			imshow("line " + std::to_string(line), check_image);
-			cv::waitKey();
+			imshow("line " + ts(l), check_image);
+			waitKey();
 		}
 
-		cv::destroyAllWindows();
-
+		destroyAllWindows();
 		return text;
 	}
 
@@ -322,13 +301,11 @@ namespace ocr
 			return data;
 		}
 
-		data.resize(lines.size());
-
 		// Append training data
+		data.resize(lines.size());
 		for (size_t l = 0; l < lines.size(); l++)
 		{
 			vector<blob> blobs = lines[l].get_blobs();
-
 			for (size_t b = 0; b < blobs.size(); b++)
 				data[l][text[l][b]].push_back(image(blobs[b].get_roi()));
 		}
@@ -336,39 +313,31 @@ namespace ocr
 		return data;
 	}
 
-	optional<Mat> page::draw(bool draw_letters)
+	Mat page::draw(bool _draw_letters)
 	{
-		// Check if the text matches blobs
-		if (draw_letters && !check_text())
-			return optional<Mat>();
-
-		// Create image container
-		Mat draw_image = conv1to3(image);
-
-		// Draw lines
+		Mat _image = conv1to3(image);
 		for (size_t l = 0; l < lines.size(); l++)
 		{
 			// Draw the frame
 			blob frame = lines[l].get_frame();
-			frame.draw(draw_image, Vec3b(0, 255, 0));
-
-			if (draw_letters)
-				putText(draw_image, String("line " + to_string(l)), Point(20, frame._r.y), cv::FONT_HERSHEY_DUPLEX, 0.8, Vec3b(255, 255, 255));
-
-			vector<blob> blobs = lines[l].get_blobs();
+			frame.draw(_image, green);
 
 			// Draw blobs
+			vector<blob> blobs = lines[l].get_blobs();
 			for (size_t b = 0; b < blobs.size(); b++)
 			{
 				blob bl = blobs[b];
-				bl.draw(draw_image, Vec3b(0, 0, 255));
+				bl.draw(_image, red);
 
-				if (draw_letters)
-					putText(draw_image, string(1, text[l][b]), Point(bl._l.x, bl._r.y + 15), FONT_HERSHEY_SIMPLEX, 1, Vec3b(0, 255, 255));
+				if (_draw_letters)
+					putText(_image, string(1, text[l][b]), Point(bl._l.x, bl._r.y + 15), FONT_HERSHEY_SIMPLEX, 1, Vec3b(0, 255, 255));
 			}
+
+			// Draw letters
+			if (_draw_letters && text.size() < l && lines[l].size() == text[l].size())
+				putText(_image, String("[" + ts(l) + "]"), Point(20, frame._r.y), cv::FONT_HERSHEY_DUPLEX, 1.0, white);
 		}
 
-		// Return the image optional
-		return draw_image;
+		return _image;
 	}
 }

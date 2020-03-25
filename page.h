@@ -2,6 +2,7 @@
 
 namespace ocr
 {
+	// A wrapper for text images
 	class page
 	{
 	private:
@@ -21,12 +22,12 @@ namespace ocr
 		void set_text(vector<string> _text);
 		void set_image(cv::Mat _image);
 
-		void classify(function<bool(float)> eligible, int min_points);
-		void ext_classify(function<bool(float)> eligible, size_t _min_blob, bool draw_text = false, std::string display_text = "extended");
-		vector<string> get_text(ocr::dictionary& dictionary);
-		vector<string> get_text_extended(ocr::dictionary& dictionary);
-		vector<map<char, vector<cv::Mat>>> get_training_data();
+		void classify(function<bool(float)> _eligible, int _min_points);
+		void ext_classify(function<bool(float)> _eligible, size_t _min_blob, bool _draw_letters = false);
+		vector<string> get_text(ocr::dictionary& _dictionary);
+		vector<string> get_text_extended(ocr::dictionary& _dictionary);
+		vector<map<char, vector<Mat>>> get_training_data();
 
-		optional<cv::Mat> draw(bool draw_letters = true);
+		Mat draw(bool _draw_letters = true);
 	};
 }
