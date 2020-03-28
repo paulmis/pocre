@@ -8,15 +8,15 @@ namespace ocr
 		// Check if the number of lines match
 		if (lines.size() != text.size())
 		{
-			jerr("Missmatch in the number of lines: expected " + std::to_string(lines.size()) + " lines, but the text is " + std::to_string(text.size()) + " lines long");
+			jerr("Missmatch in the number of lines: expected " + ts(lines.size()) + " lines, but the text is " + ts(text.size()) + " lines long");
 			return false;
 		}
 
 		// Check if the number of blobs in each line match
 		for (int l = 0; l < lines.size(); l++)
-			if (lines[l].size() != text[l].size())
+			if (lines[l].size() != non_whitespace_count(text[l]))
 			{
-				jerr("Missmatch in line " + std::to_string(l + 1) + ": expected " + std::to_string(lines[l].size()) + " signs but the text is " + std::to_string(text[l].size()) + " characters long");
+				jerr("Missmatch in line " + ts(l + 1) + ": expected " + ts(lines[l].size()) + " signs but the text is " + ts(non_whitespace_count(text[l])) + " characters long");
 				return false;
 			}
 
@@ -112,7 +112,7 @@ namespace ocr
 						}
 					}
 
-					if (points.size() > 50)
+					if (points.size() > 40)
 						for (cv::Point pt : points)
 							_image.at<float>(pt) = 0.0;
 				}
@@ -120,9 +120,9 @@ namespace ocr
 		cv::imshow("2", _image);
 		cv::threshold(_image, _image, 0.5, 1.0, cv::THRESH_TOZERO);
 		cv::imshow("3", _image);
-		cv::GaussianBlur(_image, _image, cv::Size(5, 5), 0.4);
+		cv::GaussianBlur(_image, _image, Size(5, 5), 0.4);
 		cv::imshow("4", _image);
-		cv::resize(_image, _image, cv::Size(), 3.0, 3.0, INTER_CUBIC);
+		cv::resize(_image, _image, Size(), 3.0, 3.0, INTER_CUBIC);
 		cv::imshow("5", _image);
 		cv::threshold(_image, _image, 0.4, 1.0, cv::THRESH_TOZERO);
 		cv::imshow("6", _image);
@@ -142,7 +142,7 @@ namespace ocr
 									 Point(-1, -1), Point(1, -1), Point(-1, 1), Point(1, 1) };
 
 		// Declare containers
-		Rect frame(cv::Point(), image.size());
+		Rect frame(Point(), image.size());
 		std::vector<blob> blobs;
 		vector<vector<bool>> visited(image.rows, vector<bool>(image.cols, false));
 
@@ -155,7 +155,7 @@ namespace ocr
 				if (!visited[y][x] && _eligible(image.at<float>(y, x)))
 				{
 					ocr::blob blob;
-					vector<cv::Point> points = blob.make(cv::Point(x, y), image, visited, _eligible, frame);
+					vector<cv::Point> points = blob.make(Point(x, y), image, visited, _eligible, frame);
 
 					// Insert to blob if it's big enough
 					if (points.size() > _min_points&& points.size() < _min_points * 15)
@@ -220,16 +220,21 @@ namespace ocr
 
 		// Classify subsequent blobs
 		for (int l = 0; l < lines.size(); l++)
-			for (ocr::blob b : lines[l].get_blobs())
+		{
+			vector<blob> blobs = lines[l].get_blobs();
+			for (int it = 0; it < blobs.size(); it++)
 			{
 				// Preprocess
-				Mat sign_image = image(b.get_roi());
+				Mat sign_image = image(blobs[it].get_roi());
 				resize(sign_image, _dictionary.image_size());
 				conv3to1(sign_image);
 				blur(sign_image, sign_image, Size(3, 3));
-
 				text[l].push_back(_dictionary.classify(sign_image).c);
+
+				if (it != blobs.size() - 1 && blobs[it + 1]._l.x - blobs[it]._r.x > _dictionary.image_size().width * 0.8)
+					text[l].push_back(' ');
 			}
+		}
 
 		return text;
 	}
@@ -252,7 +257,7 @@ namespace ocr
 			// Get line's images and draw them
 			vector<Mat> images;
 
-			for (blob b : lines[l].get_blobs())
+			for (blob b : blobs)
 			{
 				Mat sign_image = image(b.get_roi());
 				resize(sign_image, image_size);
@@ -275,6 +280,9 @@ namespace ocr
 				pair<result, vector<Mat>> res = _dictionary.ext_classify(images[it]);
 				text[l].push_back(res.first.c);
 				draw_row(res.second, check_image, Point(image_size.width, image_size.height * (it + 1)), one_redgreen);
+
+				if (it != blobs.size() - 1 && blobs[it + 1]._l.x - blobs[it]._r.x > image_size.width * 0.8)
+					text[l].push_back(' ');
 			}
 
 			// Print results

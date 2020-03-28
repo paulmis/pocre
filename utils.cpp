@@ -134,3 +134,16 @@ float dec_round(float x, int places)
 	int mul = (int)pow(10, places);
 	return ((int)((float)x * (float)mul)) / (float)mul;
 }
+
+int non_whitespace_count(std::string& str)
+{
+	int cnt = str.size();
+	for(char c : str)
+		for(char wc : {' ', '.', ',', '\n', '\r', ':'})
+			if (c == wc)
+			{
+				cnt--;
+				break;
+			}
+	return cnt;
+}

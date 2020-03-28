@@ -50,7 +50,7 @@ int main()
 			// Get training data
 			std::cout << image_path << "\n";
 			page.set_text(text);
-			page.ext_classify(eligible, 50, true, image_path);
+			page.ext_classify(eligible, 50, true);
 			std::vector<std::map<char, std::vector<cv::Mat>>> image_data = page.get_training_data();
 
 			// Insert page's training data
@@ -67,19 +67,17 @@ int main()
 	ocr::dictionary dictionary("dictionary");
 
 	// Get image
-	std::string image_name = "0a3";
+	std::string image_name = "0a10";
 	std::string path = "traindata/" + image_name + ".png";
 	cv::Mat image = cv::imread(path);
 
 	// Create a page
 	ocr::page page(image);
-	page.ext_classify(eligible, 70);
+	page.ext_classify(eligible, 50);
 
 	// Recognize text and display information
 	std::vector<std::string> text = page.get_text_extended(dictionary);
-
 	std::cout << "Recognized text:\n";
-
 	for (std::string& line : text)
 		std::cout << line << "\n";
 }

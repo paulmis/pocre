@@ -38,7 +38,6 @@ std::string splstr(std::string& str, size_t& it, char delim)
 	return ret;
 }
 
-cv::Scalar red = cv::Scalar(255, 0, 0), white = cv::Scalar(255, 255, 255), black = cv::Scalar(0, 0, 0);
 bool file_read(std::ifstream& in, std::string& str);
 void print_mat_type(cv::Mat image, std::string mat_name = "Matrix");
 void draw_row(std::vector<cv::Mat> src, cv::Mat dst, cv::Point start, std::function<cv::Vec3b(double)> adapt);
@@ -51,3 +50,4 @@ void resize(cv::Mat& src, double fx, double fy);
 cv::Vec3b one_redgreen(double x);
 cv::Vec3b one_white(double x);
 float dec_round(float x, int places);
+int non_whitespace_count(std::string& str);
