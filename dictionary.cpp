@@ -34,7 +34,7 @@ namespace ocr
 				int x = 32 * (it - (int)floor(it / 30) * 30);
 				image.copyTo(display_image(Rect(x, y, image.size().width, image.size().height)));
 			}
-
+			
 			blink_image(display_image, string(1, c.first));
 		}
 

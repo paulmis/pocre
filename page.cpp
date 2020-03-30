@@ -263,6 +263,7 @@ namespace ocr
 				resize(sign_image, image_size);
 				conv3to1(sign_image);
 				blur(sign_image, sign_image, Size(3, 3));
+				blur(sign_image, sign_image, Size(3, 3));
 				images.push_back(sign_image);
 			}
 

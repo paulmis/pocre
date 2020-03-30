@@ -108,7 +108,7 @@ namespace ocr
 
 		// Normalize the result
 		double f = _original_size.aspectRatio() / hw_factor;
-		result.val *= min(1.0, (f > 1.0 ? 1 / f : f) + 0.2);
+		result.val *= min(1.0, ((f > 1.0 ? 1 / f : f) + 0.45) * 0.8);
 		return result;
 	}
 
@@ -127,21 +127,21 @@ namespace ocr
 		result result(c);
 		for (int y = 0; y < heatmap.size().height; y++)
 			for (int x = 0; x < heatmap.size().width; x++)
-			{
 				gradient_image.at<float>(y, x) = _gradient.at(_image.at<float>(y, x), heatmap.at<float>(y, x));
+
+		// Apply the localize kernel
+		float localize_data[25] = { 0.0266, 0.0266, 0.04, 0.0266, 0.0266, 0.0266, 0.04, 0.0666, 0.04, 0.0266, 0.04, 0.0666, 0.0933, 0.0666, 0.04, 0.0266, 0.04, 0.0666, 0.04, 0.0266, 0.0266, 0.0266, 0.04, 0.0266, 0.0266 };
+		Mat localize_kernel(5, 5, CV_32FC1, localize_data);
+		cv::filter2D(gradient_image, gradient_image, -1, localize_kernel);
+		
+		for (int y = 0; y < heatmap.size().height; y++)
+			for (int x = 0; x < heatmap.size().width; x++)
 				result += gradient_image.at<float>(y, x);
-			}
 
 		// Normalize the result
-		static function<float(float)> size_transform = [](float d)
-		{
-			if (d < 0.3) return 1.0;
-			else return max(0.0, 1.0 - (3 * (d - 0.3)));
-		};
-
 		result.val /= (long long)heatmap.size().height * heatmap.size().width;
 		double f = _original_size.aspectRatio() / hw_factor;
-		result.val *= min(1.0, (f > 1.0 ? 1 / f : f) + 0.2);
+		result.val *= min(1.0, ((f > 1.0 ? 1 / f : f) + 0.45) * 0.8);
 		return make_pair(result, gradient_image);
 	}
 

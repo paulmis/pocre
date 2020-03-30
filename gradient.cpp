@@ -73,7 +73,6 @@ namespace ocr
 		// 1.0 causes overflow as it would be in the next interval
 		int iy = (int)(y * height) - (y == 1.0);
 		int ix = (int)(x * width) - (x == 1.0);
-
 		return heatmap[iy][ix];
 	}
 }

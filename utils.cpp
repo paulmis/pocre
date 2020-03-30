@@ -83,7 +83,7 @@ cv::Mat conv3to1(cv::Mat _image)
 		for (int x = 0; x < _image.size().width; x++)
 		{
 			cv::Vec3b px = _image.at<cv::Vec3b>(y, x);
-			image.at<float>(y, x) = 0.0013072 * (px[0] + px[1] + px[2]);
+			image.at<float>(y, x) = std::min(1.0, std::max(0.0, 0.0013072 * (px[0] + px[1] + px[2])));
 		}
 
 	return image;
