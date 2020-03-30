@@ -3,22 +3,22 @@
 
 namespace ocr
 {
-	sign::sign(std::ifstream& in, cv::Size _heatmap_size)
+	sign::sign(ifstream& _in, Size _heatmap_size)
 	{
-		if (!load(in, _heatmap_size))
+		if (!load(_in, _heatmap_size))
 			journal("Failed to construct a sign", log_error);
 	}
 
-	sign::sign(char _c, vector<Mat> _images, cv::Size _heatmap_size)
+	sign::sign(char _c, vector<Mat> _images, Size _heatmap_size)
 		: c(_c), images(0)
 	{
 		make(_images, _heatmap_size);
 	}
 
-	void sign::make(vector<Mat> _images, cv::Size _heatmap_size)
+	// Builds the sign data from the sign's images
+	void sign::make(vector<Mat> _images, Size _heatmap_size)
 	{
 		heatmap = Mat::zeros(_heatmap_size, CV_32FC1);
-
 		for (Mat image : _images)
 			add(image);
 
@@ -27,98 +27,25 @@ namespace ocr
 				heatmap.at<float>(y, x) = min((float)1.0000, dec_round(heatmap.at<float>(y, x), 4));
 	}
 
-	result sign::match(cv::Mat _image, ocr::gradient& gradient)
+	void sign::save(std::ofstream& _out)
 	{
-		// Ascertain that there isn't size mismatch
-		if (_image.size() != heatmap.size())
-		{
-			journal("Can't match sign " + std::string(c, 1) + " to the image - size disparity", log_error);
-			return DEFAULT_RESULT;
-		}
-
-		ocr::result result(c);
-
-		// Run the image through the gradient
-		for (int y = 0; y < heatmap.size().height; y++)
-			for (int x = 0; x < heatmap.size().width; x++)
-				result += gradient.at(_image.at<float>(y, x), heatmap.at<float>(y, x));
-
-		// Normalize the result
-		result.val /= (long long)heatmap.size().height * heatmap.size().width;
-
-		return result;
-	}
-
-	std::pair<ocr::result, cv::Mat> sign::ext_match(cv::Mat _image, ocr::gradient& gradient)
-	{
-		cv::Mat gradient_image(_image.size(), CV_32FC1);
-
-		// Ascertain that there isn't size mismatch
-		if (_image.size() != heatmap.size())
-		{
-			journal("Can't match sign " + std::string(c, 1) + " to the image - size disparity", log_error);
-			return make_pair(DEFAULT_RESULT, gradient_image);
-		}
-
-		ocr::result result(c);
-
-		// Run the image through the gradient
-		for (int y = 0; y < heatmap.size().height; y++)
-		{
-			for (int x = 0; x < heatmap.size().width; x++)
-			{
-				gradient_image.at<float>(y, x) = gradient.at(_image.at<float>(y, x), heatmap.at<float>(y, x));
-				result += gradient_image.at<float>(y, x);
-			}
-		}
-
-		// Normalize the result
-		result.val /= (long long)heatmap.size().height * heatmap.size().width;
-
-		return make_pair(result, gradient_image);
-	}
-
-	void sign::add(Mat _image)
-	{
-		// Resize the image to fit the heatmap
-		resize(_image, _image, heatmap.size());
-		float image_weight = (float)images / (float)(images + 1);
-		float input_weight = (float)1.0 - image_weight;
-
-		// Add the shadow
-		for (int y = 0; y < heatmap.size().height; y++)
-			for (int x = 0; x < heatmap.size().width; x++)
-				heatmap.at<float>(y, x) = image_weight * heatmap.at<float>(y, x) +
-					input_weight * _image.at<float>(y, x);
-
-		images++;
-	}
-
-	void sign::show(string caption)
-	{
-		imshow(caption, heatmap);
-		waitKey(0);
-	}
-
-	void sign::save(std::ofstream& out)
-	{
-		out << c << " " << images << "\n";
+		_out << c << " " << images << " " << hw_factor << "\n";
 
 		for (int y = 0; y < heatmap.size().height; y++)
 		{
 			for (int x = 0; x < heatmap.size().width; x++)
-				out << fixed << setprecision(5) << heatmap.at<float>(y, x) << " ";
+				_out << fixed << setprecision(5) << heatmap.at<float>(y, x) << " ";
 
-			out << "\n";
+			_out << "\n";
 		}
 	}
 
-	bool sign::load(std::ifstream& in, cv::Size _heatmap_size)
+	bool sign::load(std::ifstream& _in, Size _heatmap_size)
 	{
-		std::string buf;
+		string buf;
 		size_t it = 2;
 
-		if (!file_read(in, buf))
+		if (!file_read(_in, buf))
 		{
 			journal("Missing sign data", log_error);
 			return false;
@@ -126,11 +53,12 @@ namespace ocr
 
 		c = buf[0];
 		images = splstr<int>(buf, it);
-		heatmap = cv::Mat(_heatmap_size, CV_32FC1);
+		hw_factor = splstr<float>(buf, it);
+		heatmap = Mat(_heatmap_size, CV_32FC1);
 
 		for (int y = 0; y < heatmap.size().height; y++)
 		{
-			if (!file_read(in, buf))
+			if (!file_read(_in, buf))
 			{
 				journal("Missing sign data", log_error);
 				return false;
@@ -145,12 +73,90 @@ namespace ocr
 		return true;
 	}
 
+	// Builds a single image's data
+	void sign::add(Mat _image)
+	{
+		// Resize the image to fit the heatmap
+		float image_weight = (float)images / (float)(images + 1);
+		float input_weight = (float)1.0 - image_weight;
+		hw_factor = input_weight * _image.size().aspectRatio() + image_weight * hw_factor;
+		resize(_image, _image, heatmap.size());
+
+		// Add the shadow
+		for (int y = 0; y < heatmap.size().height; y++)
+			for (int x = 0; x < heatmap.size().width; x++)
+				heatmap.at<float>(y, x) = image_weight * heatmap.at<float>(y, x) +
+				input_weight * _image.at<float>(y, x);
+
+		images++;
+	}
+
+	result sign::match(Mat _image, Size _original_size, gradient& _gradient)
+	{
+		// Ascertain that there isn't size mismatch
+		if (_image.size() != heatmap.size())
+		{
+			journal("Can't match sign " + string(c, 1) + ". Image and heatmap are of different sizes.", log_error);
+			return DEFAULT_RESULT;
+		}
+
+		// Run the image through the gradient
+		result result(c);
+		for (int y = 0; y < heatmap.size().height; y++)
+			for (int x = 0; x < heatmap.size().width; x++)
+				result += _gradient.at(_image.at<float>(y, x), heatmap.at<float>(y, x));
+
+		// Normalize the result
+		double f = _original_size.aspectRatio() / hw_factor;
+		result.val *= min(1.0, (f > 1.0 ? 1 / f : f) + 0.2);
+		return result;
+	}
+
+	pair<result, Mat> sign::ext_match(Mat _image, Size _original_size, gradient& _gradient)
+	{
+		Mat gradient_image(_image.size(), CV_32FC1);
+
+		// Ascertain that there isn't size mismatch
+		if (_image.size() != heatmap.size())
+		{
+			journal("Can't match sign " + std::string(c, 1) + " to the image - size disparity", log_error);
+			return make_pair(DEFAULT_RESULT, gradient_image);
+		}
+
+		// Run the image through the gradient
+		result result(c);
+		for (int y = 0; y < heatmap.size().height; y++)
+			for (int x = 0; x < heatmap.size().width; x++)
+			{
+				gradient_image.at<float>(y, x) = _gradient.at(_image.at<float>(y, x), heatmap.at<float>(y, x));
+				result += gradient_image.at<float>(y, x);
+			}
+
+		// Normalize the result
+		static function<float(float)> size_transform = [](float d)
+		{
+			if (d < 0.3) return 1.0;
+			else return max(0.0, 1.0 - (3 * (d - 0.3)));
+		};
+
+		result.val /= (long long)heatmap.size().height * heatmap.size().width;
+		double f = _original_size.aspectRatio() / hw_factor;
+		result.val *= min(1.0, (f > 1.0 ? 1 / f : f) + 0.2);
+		return make_pair(result, gradient_image);
+	}
+
+	void sign::show(string _caption)
+	{
+		imshow(_caption, heatmap);
+		waitKey(0);
+	}
+
 	char sign::get_char()
 	{
 		return c;
 	}
 
-	cv::Mat sign::get_heatmap()
+	Mat sign::get_heatmap()
 	{
 		return heatmap;
 	}

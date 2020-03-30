@@ -7,26 +7,28 @@ namespace ocr
 	class sign
 	{
 		char c;
-		size_t images;
-		cv::Mat heatmap;
+		int images;
+		float hw_factor;
+		Mat heatmap;
 
 	public:
 
 		sign();
-		sign(std::ifstream& in, cv::Size _heatmap_size);
-		sign(char _c, vector<cv::Mat> _images, cv::Size _heatmap_size);
+		sign(ifstream& _in, Size _heatmap_size);
+		sign(char _c, vector<Mat> _images, Size _heatmap_size);
 
-		void make(vector<cv::Mat> _images, cv::Size _heatmap_size);
-		ocr::result match(cv::Mat _image, ocr::gradient& gradient);
-		std::pair<ocr::result, cv::Mat> ext_match(cv::Mat _image, ocr::gradient& gradient);
-		void add(cv::Mat _image);
-		void show(std::string _caption = "");
+		void save(ofstream& _out);
+		bool load(ifstream& _in, Size _heatmap_size);
 
-		void save(std::ofstream& out);
-		bool load(std::ifstream& in, cv::Size _heatmap_size);
+		void make(vector<Mat> _images, Size _heatmap_size);
+		void add(Mat _image);
+
+		result match(Mat _image, Size _original_size, gradient& _gradient);
+		pair<result, Mat> ext_match(Mat _image, Size _original_size, gradient& _gradient);
+		void show(string _caption = "");
 
 		char get_char();
-		cv::Mat get_heatmap();
+		Mat get_heatmap();
 	};
 
 	struct sign_comparator

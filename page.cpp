@@ -67,18 +67,18 @@ namespace ocr
 		text.clear();
 
 		// Preprocessing
-		cv::imshow("0", _image);
+		imshow("0", _image);
 		if (_image.channels() > 1)
 		{
 			for (int y = 0; y < _image.rows; y++)
 				for (int x = 0; x < _image.cols; x++)
 				{
-					cv::Vec3b px = _image.at<Vec3b>(y, x);
+					Vec3b px = _image.at<Vec3b>(y, x);
 					int mx = min(255, px[0] + 15);
-					_image.at<Vec3b>(y, x) = (px[0] == px[1] && px[1] == px[2] ? cv::Vec3b(mx, mx, mx) : cv::Vec3b(0, 0, 0));
+					_image.at<Vec3b>(y, x) = (px[0] == px[1] && px[1] == px[2] ? Vec3b(mx, mx, mx) : Vec3b(0, 0, 0));
 				}
 
-			cv::imshow("1", _image);
+			imshow("1", _image);
 			_image = conv3to1(_image);
 		}
 
@@ -113,19 +113,19 @@ namespace ocr
 					}
 
 					if (points.size() > 40)
-						for (cv::Point pt : points)
+						for (Point pt : points)
 							_image.at<float>(pt) = 0.0;
 				}
 
-		cv::imshow("2", _image);
-		cv::threshold(_image, _image, 0.5, 1.0, cv::THRESH_TOZERO);
-		cv::imshow("3", _image);
-		cv::GaussianBlur(_image, _image, Size(5, 5), 0.4);
-		cv::imshow("4", _image);
-		cv::resize(_image, _image, Size(), 3.0, 3.0, INTER_CUBIC);
-		cv::imshow("5", _image);
-		cv::threshold(_image, _image, 0.4, 1.0, cv::THRESH_TOZERO);
-		cv::imshow("6", _image);
+		imshow("2", _image);
+		threshold(_image, _image, 0.5, 1.0, THRESH_TOZERO);
+		imshow("3", _image);
+		GaussianBlur(_image, _image, Size(5, 5), 0.4);
+		imshow("4", _image);
+		resize(_image, image_scaling, image_scaling);
+		imshow("5", _image);
+		threshold(_image, _image, 0.4, 1.0, THRESH_TOZERO);
+		imshow("6", _image);
 
 		for (int y = 0; y < _image.rows; y++)
 			for (int x = 0; x < _image.cols; x++)
@@ -155,7 +155,7 @@ namespace ocr
 				if (!visited[y][x] && _eligible(image.at<float>(y, x)))
 				{
 					ocr::blob blob;
-					vector<cv::Point> points = blob.make(Point(x, y), image, visited, _eligible, frame);
+					vector<Point> points = blob.make(Point(x, y), image, visited, _eligible, frame);
 
 					// Insert to blob if it's big enough
 					if (points.size() > _min_points&& points.size() < _min_points * 15)
@@ -172,7 +172,7 @@ namespace ocr
 									if (blob.inside(b.mid()))
 									{
 										inside_other_blob = true;
-										for (cv::Point pt : points)
+										for (Point pt : points)
 											image.at<float>(pt.y, pt.x) = 0.0;
 									}
 
@@ -191,7 +191,7 @@ namespace ocr
 
 					// Otherwise erase all its points from the image
 					else
-						for (cv::Point pt : points)
+						for (Point pt : points)
 							image.at<float>(pt.y, pt.x) = 0.0;
 				}
 			}
@@ -207,9 +207,9 @@ namespace ocr
 	void page::ext_classify(function<bool(float)> _eligible, size_t _min_blob, bool _draw_letters)
 	{
 		classify(_eligible, _min_blob);
-		cv::imshow("final", draw(_draw_letters));
-		cv::waitKey();
-		cv::destroyAllWindows();
+		imshow("final", draw(_draw_letters));
+		waitKey();
+		destroyAllWindows();
 	}
 
 	vector<string> page::get_text(ocr::dictionary& _dictionary)
@@ -229,7 +229,7 @@ namespace ocr
 				resize(sign_image, _dictionary.image_size());
 				conv3to1(sign_image);
 				blur(sign_image, sign_image, Size(3, 3));
-				text[l].push_back(_dictionary.classify(sign_image).c);
+				text[l].push_back(_dictionary.classify(sign_image, blobs[it].get_roi().size()).c);
 
 				if (it != blobs.size() - 1 && blobs[it + 1]._l.x - blobs[it]._r.x > _dictionary.image_size().width * 0.8)
 					text[l].push_back(' ');
@@ -277,7 +277,7 @@ namespace ocr
 			// Classify images and draw gradients
 			for (int it = 0; it < images.size(); it++)
 			{
-				pair<result, vector<Mat>> res = _dictionary.ext_classify(images[it]);
+				pair<result, vector<Mat>> res = _dictionary.ext_classify(images[it], blobs[it].get_roi().size());
 				text[l].push_back(res.first.c);
 				draw_row(res.second, check_image, Point(image_size.width, image_size.height * (it + 1)), one_redgreen);
 
@@ -343,7 +343,7 @@ namespace ocr
 
 			// Draw letters
 			if (_draw_letters && text.size() < l && lines[l].size() == text[l].size())
-				putText(_image, String("[" + ts(l) + "]"), Point(20, frame._r.y), cv::FONT_HERSHEY_DUPLEX, 1.0, white);
+				putText(_image, String("[" + ts(l) + "]"), Point(20, frame._r.y), FONT_HERSHEY_DUPLEX, 1.0, white);
 		}
 
 		return _image;

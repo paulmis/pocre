@@ -2,6 +2,8 @@
 
 namespace ocr
 {
+	static float image_scaling = 3.0;
+
 	// A wrapper for text images
 	class page
 	{
@@ -16,11 +18,11 @@ namespace ocr
 	public:
 
 		page();
-		page(cv::Mat _image);
+		page(Mat _image);
 
 		void set_text(string _text);
 		void set_text(vector<string> _text);
-		void set_image(cv::Mat _image);
+		void set_image(Mat _image);
 
 		void classify(function<bool(float)> _eligible, int _min_points);
 		void ext_classify(function<bool(float)> _eligible, size_t _min_blob, bool _draw_letters = false);

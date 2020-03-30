@@ -6,25 +6,25 @@ namespace ocr
 	{
 	private:
 
-		cv::Size heatmap_size;
-		std::vector<ocr::sign> signs;
-		ocr::gradient gradient;
+		Size heatmap_size;
+		vector<sign> signs;
+		gradient gradient;
 
 	public:
 
-		dictionary(std::string path);
-		dictionary(std::map<char, std::vector<cv::Mat>> _data);
+		dictionary(string path);
+		dictionary(map<char, vector<Mat>> _data);
 		void show_signs();
 
-		bool save(std::string name, bool save_gradient = true);
-		bool load(std::string name);
+		bool save(string name, bool save_gradient = true);
+		bool load(string name);
 
-		ocr::result classify(cv::Mat image);
-		std::pair<ocr::result, std::vector<cv::Mat>> ext_classify(cv::Mat image);
+		result classify(Mat _image, Size _original_size);
+		pair<result, vector<Mat>> ext_classify(Mat image, Size _original_size);
 
 		uint size();
-		cv::Size image_size();
-		std::vector<ocr::sign> get_signs();
+		Size image_size();
+		vector<sign> get_signs();
 	};
 }
 
